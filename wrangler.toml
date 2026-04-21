@@ -10,10 +10,10 @@ crons = ["0 2 * * *"]
 
 [[kv_namespaces]]
 binding = "APP_CACHE"
-id = "00000000000000000000000000000000"
-preview_id = "00000000000000000000000000000000"
+id = "685a4965b7fe42d9ae3bbc1d46d5f14f"
+preview_id = "f3be72249fb84201af7bd1016fd56fd2"
 
 [[kv_namespaces]]
 binding = "FX_CACHE"
-id = "00000000000000000000000000000000"
-preview_id = "00000000000000000000000000000000"
+id = "b31b8a71e5c0463a8928a0f7a2ed810e"
+preview_id = "754d5a92d6934b39a3cc4e7b6fd51ed1"

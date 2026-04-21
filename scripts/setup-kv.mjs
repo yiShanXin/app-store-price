@@ -27,6 +27,24 @@ function parseWorkerName(toml) {
   return match[1];
 }
 
+function parseNamespaceListOutput(output) {
+  const trimmed = output.trim();
+  if (!trimmed) {
+    throw new Error("kv namespace list returned empty output");
+  }
+  const jsonStart = trimmed.indexOf("[");
+  const jsonText = jsonStart >= 0 ? trimmed.slice(jsonStart) : trimmed;
+  try {
+    const parsed = JSON.parse(jsonText);
+    if (!Array.isArray(parsed)) {
+      throw new Error("kv namespace list output is not an array");
+    }
+    return parsed;
+  } catch (error) {
+    throw new Error(`cannot parse kv namespace list output: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
 function findNamespaceId(all, expectedTitle, binding, preview) {
   const exact = all.find((item) => item.title === expectedTitle);
   if (exact?.id) return exact.id;
@@ -43,7 +61,6 @@ function findNamespaceId(all, expectedTitle, binding, preview) {
 function updateBindingBlock(toml, binding, id, previewId) {
   const blockRegex = new RegExp(
     `\\[\\[kv_namespaces\\]\\]\\n\\s*binding\\s*=\\s*"${binding}"\\n[\\s\\S]*?(?=\\n\\[\\[kv_namespaces\\]\\]|$)`,
-    "m",
   );
   const blockMatch = toml.match(blockRegex);
   if (!blockMatch) {
@@ -51,14 +68,14 @@ function updateBindingBlock(toml, binding, id, previewId) {
   }
 
   const updatedBlock = blockMatch[0]
-    .replace(/id\s*=\s*"[^"]*"/, `id = "${id}"`)
-    .replace(/preview_id\s*=\s*"[^"]*"/, `preview_id = "${previewId}"`);
+    .replace(/^id\s*=\s*"[^"]*"/m, `id = "${id}"`)
+    .replace(/^preview_id\s*=\s*"[^"]*"/m, `preview_id = "${previewId}"`);
 
   return toml.replace(blockRegex, updatedBlock);
 }
 
 const toml = readFileSync(wranglerTomlPath, "utf8");
-const workerName = parseWorkerName(toml);
+parseWorkerName(toml);
 const bindings = ["APP_CACHE", "FX_CACHE"];
 
 for (const binding of bindings) {
@@ -66,12 +83,12 @@ for (const binding of bindings) {
   run(`npx wrangler kv namespace create ${binding} --preview`, true);
 }
 
-const namespaces = JSON.parse(run("npx wrangler kv namespace list --json"));
+const namespaces = parseNamespaceListOutput(run("npx wrangler kv namespace list"));
 
 let nextToml = toml;
 for (const binding of bindings) {
-  const id = findNamespaceId(namespaces, `${workerName}-${binding}`, binding, false);
-  const previewId = findNamespaceId(namespaces, `${workerName}-${binding}_preview`, binding, true);
+  const id = findNamespaceId(namespaces, binding, binding, false);
+  const previewId = findNamespaceId(namespaces, `${binding}_preview`, binding, true);
   nextToml = updateBindingBlock(nextToml, binding, id, previewId);
 }
 
@@ -79,8 +96,11 @@ writeFileSync(wranglerTomlPath, nextToml, "utf8");
 
 console.log("KV namespaces ready and wrangler.toml updated:");
 for (const binding of bindings) {
-  const idLine = nextToml.match(new RegExp(`binding\\s*=\\s*"${binding}"[\\s\\S]*?id\\s*=\\s*"([^"]+)"`));
-  const previewLine = nextToml.match(new RegExp(`binding\\s*=\\s*"${binding}"[\\s\\S]*?preview_id\\s*=\\s*"([^"]+)"`));
+  const block = nextToml.match(
+    new RegExp(`\\[\\[kv_namespaces\\]\\]\\n\\s*binding\\s*=\\s*"${binding}"\\n[\\s\\S]*?(?=\\n\\[\\[kv_namespaces\\]\\]|$)`),
+  )?.[0];
+  const idLine = block?.match(/^id\s*=\s*"([^"]+)"/m);
+  const previewLine = block?.match(/^preview_id\s*=\s*"([^"]+)"/m);
   console.log(`- ${binding}.id = ${idLine?.[1] ?? "N/A"}`);
   console.log(`- ${binding}.preview_id = ${previewLine?.[1] ?? "N/A"}`);
 }
