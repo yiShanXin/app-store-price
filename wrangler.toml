@@ -1,0 +1,19 @@
+name = "app-store-price"
+main = "src/worker.ts"
+compatibility_date = "2026-04-21"
+
+[assets]
+directory = "./public"
+
+[triggers]
+crons = ["0 2 * * *"]
+
+[[kv_namespaces]]
+binding = "APP_CACHE"
+id = "00000000000000000000000000000000"
+preview_id = "00000000000000000000000000000000"
+
+[[kv_namespaces]]
+binding = "FX_CACHE"
+id = "00000000000000000000000000000000"
+preview_id = "00000000000000000000000000000000"

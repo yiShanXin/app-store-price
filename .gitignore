@@ -1,0 +1,26 @@
+# dependencies
+node_modules/
+
+# cloudflare
+.wrangler/
+
+# local env
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+
+# build and cache
+dist/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# os/editor
+.DS_Store
+.idea/
+.vscode/

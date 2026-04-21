@@ -1,0 +1,16 @@
+{
+  "name": "app-store-price-cf",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup:kv": "node scripts/setup-kv.mjs",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260418.0",
+    "typescript": "^5.8.3",
+    "wrangler": "^4.12.0"
+  }
+}
