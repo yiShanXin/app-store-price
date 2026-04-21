@@ -147,7 +147,12 @@ async function getAppList(env: Env, areaCode: string, appName: string): Promise<
 
   const cacheKey = `app-list:${areaCode}:${appName.toLowerCase()}`;
   const cached = await getJSON<AppListItem[]>(env.APP_CACHE, cacheKey);
-  if (cached?.length) return cached;
+  if (cached?.length) {
+    return cached.map((item) => ({
+      ...item,
+      appImage: normalizeAppImageTemplate(item.appImage),
+    }));
+  }
 
   const platforms = ["iphone", "ipad", "mac", "tv"];
   const platformResults = await Promise.all(
@@ -164,7 +169,7 @@ async function getAppList(env: Env, areaCode: string, appName: string): Promise<
         result.push({
           appId: String(deepGet(lockup, ["adamId"], "")),
           appName: String(deepGet(lockup, ["title"], "")),
-          appImage: String(deepGet(lockup, ["icon", "template"], "")),
+          appImage: normalizeAppImageTemplate(String(deepGet(lockup, ["icon", "template"], ""))),
           appDesc: String(deepGet(lockup, ["subtitle"], "")),
           platform,
         });
@@ -438,4 +443,18 @@ function deepGet(value: unknown, path: Array<string | number>, fallback: unknown
 function round(value: number, digits: number): number {
   const factor = 10 ** digits;
   return Math.round((value + Number.EPSILON) * factor) / factor;
+}
+
+function normalizeAppImageTemplate(template: string): string {
+  if (!template) return "";
+  const normalized = template
+    .replace(/%7Bw%7D/gi, "{w}")
+    .replace(/%7Bh%7D/gi, "{h}")
+    .replace(/%7Bc%7D/gi, "{c}")
+    .replace(/%7Bf%7D/gi, "{f}");
+  return normalized
+    .replace("{w}", "512")
+    .replace("{h}", "512")
+    .replace("{c}", "bb")
+    .replace("{f}", "jpg");
 }
