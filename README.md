@@ -1,4 +1,6 @@
-# app-store-price (Cloudflare Workers 版本)为了方便部署 原项目请求场景会触发网络拦截  https://github.com/hypooo/app-store-price
+# app-store-price (Cloudflare Workers 版本)
+
+## 为了方便部署 原项目请求场景会触发网络拦截  https://github.com/hypooo/app-store-price
 
 这个版本把原项目迁移到 Cloudflare：
 
